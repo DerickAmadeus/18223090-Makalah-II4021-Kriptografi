@@ -17,9 +17,6 @@ def _mod_inverse(k, prime):
     return x % prime
 
 def _gaussian_elimination(matrix, vector, prime):
-    """
-    Menyelesaikan persamaan M * A = V (mod prime) untuk mencari koefisien rahasia.
-    """
     n = len(matrix)
     # Gabungkan matriks M dan vektor V (Augmented Matrix)
     A = [matrix[i] + [vector[i]] for i in range(n)]
@@ -52,10 +49,6 @@ def _gaussian_elimination(matrix, vector, prime):
     return [A[i][n] for i in range(n)]
 
 def _compute_derivative_coeff(degree, derivative_level, x, prime):
-    """
-    Menghitung nilai koefisien pengali untuk turunan ke-N dari sebuah suku polinomial.
-    Contoh: Turunan ke-1 dari x^3 adalah 3x^2.
-    """
     if derivative_level > degree:
         return 0
     
@@ -69,12 +62,6 @@ def _compute_derivative_coeff(degree, derivative_level, x, prime):
     return (multiplier * x_powered) % prime
 
 def split_secret_tassa(secret_str: str, k: int, user_roles: dict):
-    """
-    user_roles: {user_id: derivative_level}
-    Bos = Level 0 (Titik potong murni, bobot tertinggi)
-    Manager = Level 1 (Turunan pertama)
-    Karyawan = Level 2 (Turunan kedua)
-    """
     secret_int = int.from_bytes(secret_str.encode('utf-8'), byteorder='big')
     if secret_int >= PRIME:
         raise ValueError("Rahasia terlalu panjang.")
@@ -105,9 +92,6 @@ def split_secret_tassa(secret_str: str, k: int, user_roles: dict):
     return shares
 
 def recover_secret_tassa(k: int, submitted_shares: list):
-    """
-    Memulihkan rahasia dengan membangun matriks Birkhoff dan menyelesaikannya.
-    """
     if len(submitted_shares) != k:
         raise ValueError(f"Sistem Birkhoff wajib menerima tepat {k} token untuk membentuk matriks {k}x{k} yang valid.")
         
@@ -131,7 +115,7 @@ def recover_secret_tassa(k: int, submitted_shares: list):
     # Selesaikan matriks untuk mencari nilai a_0 (rahasia)
     try:
         coefficients = _gaussian_elimination(matrix, vector, PRIME)
-        secret_int = coefficients[0] # a_0 berada di indeks pertama
+        secret_int = coefficients[0] 
     except ValueError as e:
         raise ValueError(f"Gagal memulihkan rahasia: {e}")
         
@@ -150,10 +134,10 @@ if __name__ == "__main__":
     
     # Hierarki: Bos (0), Manager (1), Karyawan (2)
     roles = {
-        5: 0,   # Bos
-        15: 1,  # Manager
-        40: 2,  # Karyawan 1
-        41: 2   # Karyawan 2
+        5: 0,   
+        15: 1,  
+        40: 2,  
+        41: 2   
     }
     
     print("=== IMPLEMENTASI TASSA'S HIERARCHICAL SECRET SHARING ===")
