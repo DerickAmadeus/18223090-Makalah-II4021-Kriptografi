@@ -3,6 +3,8 @@ from app.models.schemas import SplitRequest, SplitResponse, RecoverRequest, Reco
 from app.core.shamir import split_secret, recover_secret
 from app.core.shamir_weighted import split_secret_weighted, recover_secret_weighted
 from app.models.schemas import WeightedSplitRequest, WeightedRecoverRequest
+from app.core.tassa import split_secret_tassa, recover_secret_tassa
+from app.models.schemas import TassaSplitRequest, TassaRecoverRequest, TassaShareItem
 
 router = APIRouter()
 
@@ -124,5 +126,53 @@ def recover_weighted_endpoint(req: WeightedRecoverRequest):
     except ValueError as e:
         # Jika kuorum bobot kurang dari 7 (misal kudeta 3 karyawan)
         raise HTTPException(status_code=403, detail=f"Akses Ditolak Matematika: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Terjadi kesalahan internal server.")
+
+# --- TASSA (BIRKHOFF INTERPOLATION) ---
+
+@router.post("/split-tassa")
+def split_tassa_endpoint(req: TassaSplitRequest):
+    try:
+        shares_data = split_secret_tassa(req.secret, req.k, req.user_roles)
+        
+        # Casting nilai integer raksasa Y menjadi string untuk JSON
+        formatted_shares = [
+            TassaShareItem(uid=s["uid"], level=s["level"], y=str(s["y"])) 
+            for s in shares_data
+        ]
+            
+        return {
+            "message": "Rahasia berhasil dipecah dengan metode Birkhoff Interpolation",
+            "k_matrix_dim": req.k,
+            "shares": formatted_shares
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Terjadi kesalahan internal server.")
+
+@router.post("/recover-tassa")
+def recover_tassa_endpoint(req: TassaRecoverRequest):
+    try:
+        # Pydantic sudah memastikan bentuk datanya List of Objects
+        # Kita hanya perlu casting string 'y' kembali ke integer
+        formatted_input = [
+            {"uid": s.uid, "level": s.level, "y": int(s.y)} 
+            for s in req.submitted_shares
+        ]
+        
+        # Penentuan dimensi k dari jumlah token yang disubmit
+        k_dim = len(formatted_input)
+        
+        recovered_secret = recover_secret_tassa(k_dim, formatted_input)
+        
+        return {
+            "message": "Matriks Birkhoff Berhasil Dipecahkan!",
+            "secret": recovered_secret
+        }
+    except ValueError as e:
+        # Jika matriks singular atau gagal decode
+        raise HTTPException(status_code=403, detail=f"Ditolak oleh Matriks: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail="Terjadi kesalahan internal server.")

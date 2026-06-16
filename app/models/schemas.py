@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import List
-from typing import Dict
+from typing import Dict, Any
 
 class ShareItem(BaseModel):
     x: int
@@ -61,7 +61,7 @@ class RecoverResponse(BaseModel):
     secret: str
 
 
-# Skema untuk Weighted Shamir's Secret Sharing
+# --- Skema untuk Weighted Shamir's Secret Sharing ---
 
 class WeightedSplitRequest(BaseModel):
     secret: str = Field(..., description="Teks rahasia yang ingin disembunyikan")
@@ -105,6 +105,52 @@ class WeightedRecoverRequest(BaseModel):
                         {"x": 1502, "y": "string_panjang_dari_split"}
                     ]
                 }
+            }]
+        }
+    }
+
+# --- SKEMA UNTUK TASSA'S SECRET SHARING ---
+
+class TassaSplitRequest(BaseModel):
+    secret: str = Field(..., description="Teks rahasia yang ingin disembunyikan")
+    k: int = Field(..., description="Dimensi matriks kuorum (misal: 3)")
+    user_roles: Dict[int, int] = Field(
+        ..., 
+        description="Format: {User_ID: Level_Turunan}. Bos = 0, Manager = 1, Karyawan = 2"
+    )
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [{
+                "secret": "Birkhoff_Master_2026!",
+                "k": 3,
+                "user_roles": {
+                    5: 0,   # Bos (Titik Potong)
+                    15: 1,  # Manager (Turunan ke-1)
+                    40: 2,  # Karyawan 1 (Turunan ke-2)
+                    41: 2   # Karyawan 2 (Turunan ke-2)
+                }
+            }]
+        }
+    }
+
+class TassaShareItem(BaseModel):
+    uid: int
+    level: int
+    y: str
+
+class TassaRecoverRequest(BaseModel):
+    # Tassa wajib menerima tepat 'k' buah objek token
+    submitted_shares: List[TassaShareItem] = Field(..., description="Wajib berisi tepat sejumlah k token")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [{
+                "submitted_shares": [
+                    {"uid": 5, "level": 0, "y": "string_panjang_hasil_split_bos"},
+                    {"uid": 15, "level": 1, "y": "string_panjang_hasil_split_manager"},
+                    {"uid": 40, "level": 2, "y": "string_panjang_hasil_split_karyawan"}
+                ]
             }]
         }
     }
