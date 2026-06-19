@@ -93,7 +93,7 @@ def recover_secret_weighted(list_of_user_shares: list):
     try:
         secret_str = secret_int.to_bytes(byte_length, byteorder='big').decode('utf-8')
     except UnicodeDecodeError:
-        raise ValueError("Gagal merekonstruksi. Bobot kuorum kurang atau token tidak valid.")
+        raise ValueError("Reconstruction failed: Quorum not met or shares are invalid.")
         
     return secret_str
 

@@ -31,7 +31,7 @@ def _gaussian_elimination(matrix, vector, prime):
                     
         pivot = A[i][i]
         if pivot == 0:
-            raise ValueError("Matriks singular. Kuorum hierarki tidak terpenuhi atau kombinasi token tidak valid.")
+            raise ValueError("Singular matrix - quorum not met or shares are linearly dependent.")
             
         # Normalisasi baris pivot menjadi 1
         inv = _mod_inverse(pivot, prime)
@@ -117,13 +117,13 @@ def recover_secret_tassa(k: int, submitted_shares: list):
         coefficients = _gaussian_elimination(matrix, vector, PRIME)
         secret_int = coefficients[0] 
     except ValueError as e:
-        raise ValueError(f"Gagal memulihkan rahasia: {e}")
+        raise ValueError(f"FAILED TO RECOVER: {e}")
         
     byte_length = (secret_int.bit_length() + 7) // 8
     try:
         secret_str = secret_int.to_bytes(byte_length, byteorder='big').decode('utf-8')
     except UnicodeDecodeError:
-        raise ValueError("Matriks berhasil diselesaikan, tapi hasil dekode UTF-8 hancur.")
+        raise ValueError("FAILED TO RECOVER: Decoded UTF-8 is corrupted.")
         
     return secret_str
 
