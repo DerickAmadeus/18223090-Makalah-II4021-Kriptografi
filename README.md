@@ -181,14 +181,9 @@ python scripts/generate_metrics.py
 **2. Automated Threat Simulation**
 
 ```bash
-python tests/test_threats.py
+python scripts/test_threats.py
 ```
 
-**3. Audit Log Database Verification**
-
-```bash
-python tests/cek_db.py
-```
 ## Authors
 
 - [@DerickAmadeus](https://www.github.com/DerickAmadeus)
